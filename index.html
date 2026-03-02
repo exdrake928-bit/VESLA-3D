@@ -113,13 +113,33 @@
 
 <script>
     // --- Logica per mostrare/nascondere i sottomenu ---
-    function toggleSubMenu(checkboxId, subMenuId) {
-        const checkbox = document.getElementById(checkboxId);
-        const subMenu = document.getElementById(subMenuId);
-        checkbox.addEventListener('change', function() {
-            subMenu.style.display = this.checked ? 'block' : 'none';
+   function toggleSubMenu(checkboxId, subMenuId) {
+    const checkbox = document.getElementById(checkboxId);
+    const subMenu = document.getElementById(subMenuId);
+    
+    // Funzione per attivare/disattivare i campi interni
+    const toggleInputs = (disable) => {
+        const inputs = subMenu.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.disabled = disable;
+            // Opzionale: pulisce il valore se viene disabilitato
+            if (disable && input.type !== 'file') input.value = ''; 
         });
-    }
+    };
+
+    // Stato iniziale (se non è checkato all'avvio, disabilita i campi)
+    toggleInputs(!checkbox.checked);
+
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+            subMenu.style.display = 'block';
+            toggleInputs(false);
+        } else {
+            subMenu.style.display = 'none';
+            toggleInputs(true);
+        }
+    });
+}
 
     toggleSubMenu('chkStampo', 'subStampo');
     toggleSubMenu('chkOggetto', 'subOggetto');
