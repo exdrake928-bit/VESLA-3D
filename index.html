@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Richiesta Servizi 3D</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .form-container {
+            background: #fff;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input[type="text"], input[type="email"], select {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+        }
+        .checkbox-group { margin-bottom: 10px; }
+        .checkbox-group label { display: inline-block; font-weight: normal; margin-left: 5px; }
+        .sub-menu {
+            margin-top: 10px; margin-left: 25px; padding: 15px;
+            background-color: #f9f9f9; border-left: 3px solid #007bff; display: none;
+        }
+        button {
+            width: 100%; padding: 12px; background-color: #007bff; color: white;
+            border: none; border-radius: 4px; font-size: 16px; cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover { background-color: #0056b3; }
+        .note { font-size: 0.9em; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Richiesta Servizi</h2>
+    <form id="serviceForm">
+        <div class="form-group">
+            <label for="nome">Nome Completo *</label>
+            <input type="text" id="nome" name="nome" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="azienda">Azienda</label>
+            <input type="text" id="azienda" name="azienda">
+        </div>
+
+        <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+        <label>Seleziona i servizi desiderati:</label>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="chkStampo" name="servizio_stampo" value="true">
+            <label for="chkStampo">Creazione 3D Stampo</label>
+            <div id="subStampo" class="sub-menu">
+                <div class="form-group">
+                    <label for="materiale">Materiale:</label>
+                    <select id="materiale" name="materiale_stampo">
+                        <option value="alluminio">Alluminio</option>
+                        <option value="gesso">Gesso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fileStampo">Carica File (obbligatorio se selezionato):</label>
+                    <input type="file" id="fileStampo" name="file_stampo">
+                </div>
+            </div>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="chkOggetto" name="servizio_oggetto" value="true">
+            <label for="chkOggetto">Creazione 3D Oggetto</label>
+            <div id="subOggetto" class="sub-menu">
+                <div class="form-group">
+                    <label for="fileOggetto">Carica File:</label>
+                    <input type="file" id="fileOggetto" name="file_oggetto">
+                </div>
+            </div>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="chkScansione" name="servizio_scansione" value="true">
+            <label for="chkScansione">Scansione oggetto fisico <span class="note">- Recupero in zona Campania</span></label>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="chkNuvola" name="servizio_nuvola" value="true">
+            <label for="chkNuvola">Elaborazione nuvola punti</label>
+            <div id="subNuvola" class="sub-menu">
+                <div class="form-group">
+                    <label for="fileNuvola">Carica File:</label>
+                    <input type="file" id="fileNuvola" name="file_nuvola">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit">Invia Richiesta</button>
+    </form>
+</div>
+
+<script>
+    // --- Logica per mostrare/nascondere i sottomenu ---
+    function toggleSubMenu(checkboxId, subMenuId) {
+        const checkbox = document.getElementById(checkboxId);
+        const subMenu = document.getElementById(subMenuId);
+        checkbox.addEventListener('change', function() {
+            subMenu.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
+    toggleSubMenu('chkStampo', 'subStampo');
+    toggleSubMenu('chkOggetto', 'subOggetto');
+    toggleSubMenu('chkNuvola', 'subNuvola');
+
+    // --- Logica per l'invio del form a n8n ---
+    document.getElementById('serviceForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Evita il ricaricamento della pagina
+
+        // SOSTITUISCI QUESTA URL CON IL TUO WEBHOOK DI N8N
+        const WEBHOOK_URL = 'INSERISCI_QUI_LA_TUA_URL_DI_N8N';
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        // Disabilita il bottone durante l'invio per evitare doppi click
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Invio in corso...";
+
+        try {
+            const response = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                // Non impostare "Content-Type", il browser lo imposterà in automatico 
+                // a "multipart/form-data" con il boundary corretto essendoci file
+                body: formData
+            });
+
+            if (response.ok) {
+                alert('Richiesta inviata con successo!');
+                form.reset();
+                // Nascondi i sottomenu dopo il reset
+                document.querySelectorAll('.sub-menu').forEach(el => el.style.display = 'none');
+            } else {
+                alert('Errore durante l\'invio della richiesta. Riprova.');
+            }
+        } catch (error) {
+            console.error('Errore di connessione:', error);
+            alert('Impossibile contattare il server.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Invia Richiesta";
+        }
+    });
+</script>
+
+</body>
+</html>
